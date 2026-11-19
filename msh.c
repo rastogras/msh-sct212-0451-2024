@@ -11,6 +11,9 @@ int main(void) {
     int status = 0;
 
     while (1) {
+        while (waitpid(-1, NULL, WNOHANG) > 0) {
+        }
+
         printf("msh[%d]> ", status);
         fflush(stdout);
 
@@ -29,6 +32,15 @@ int main(void) {
 
         if (i == 0) {
             continue;
+        }
+
+        int bg = 0;
+        if (strcmp(args[i - 1], "&") == 0) {
+            bg = 1;
+            args[--i] = NULL;
+            if (i == 0) {
+                continue;
+            }
         }
 
         if (strcmp(args[0], "exit") == 0) {
@@ -64,14 +76,19 @@ int main(void) {
             perror(args[0]);
             exit(127);
         } else {
-            int wstatus;
-            if (waitpid(pid, &wstatus, 0) < 0) {
-                perror("waitpid");
-                status = 1;
-            } else if (WIFEXITED(wstatus)) {
-                status = WEXITSTATUS(wstatus);
-            } else if (WIFSIGNALED(wstatus)) {
-                status = 128 + WTERMSIG(wstatus);
+            if (bg) {
+                printf("[%d]\n", pid);
+                status = 0;
+            } else {
+                int wstatus;
+                if (waitpid(pid, &wstatus, 0) < 0) {
+                    perror("waitpid");
+                    status = 1;
+                } else if (WIFEXITED(wstatus)) {
+                    status = WEXITSTATUS(wstatus);
+                } else if (WIFSIGNALED(wstatus)) {
+                    status = 128 + WTERMSIG(wstatus);
+                }
             }
         }
     }
