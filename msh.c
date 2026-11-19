@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,6 +11,8 @@ int main(void) {
     size_t len = 0;
     char *args[64];
     int status = 0;
+
+    signal(SIGINT, SIG_IGN);
 
     while (1) {
         while (waitpid(-1, NULL, WNOHANG) > 0) {
@@ -86,6 +89,7 @@ int main(void) {
             perror("fork");
             status = 1;
         } else if (pid == 0) {
+            signal(SIGINT, SIG_DFL);
             if (outfile != NULL) {
                 int fd = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
                 if (fd < 0) {
