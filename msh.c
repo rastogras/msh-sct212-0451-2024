@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,6 +44,19 @@ int main(void) {
             }
         }
 
+        char *outfile = NULL;
+        for (int j = 0; j < i; j++) {
+            if (strcmp(args[j], ">") == 0) {
+                outfile = args[j + 1];
+                args[j] = NULL;
+                break;
+            }
+        }
+
+        if (args[0] == NULL) {
+            continue;
+        }
+
         if (strcmp(args[0], "exit") == 0) {
             break;
         }
@@ -72,6 +86,19 @@ int main(void) {
             perror("fork");
             status = 1;
         } else if (pid == 0) {
+            if (outfile != NULL) {
+                int fd = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (fd < 0) {
+                    perror("open");
+                    exit(1);
+                }
+                if (dup2(fd, STDOUT_FILENO) < 0) {
+                    perror("dup2");
+                    close(fd);
+                    exit(1);
+                }
+                close(fd);
+            }
             execvp(args[0], args);
             perror(args[0]);
             exit(127);
