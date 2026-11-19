@@ -30,6 +30,25 @@ int main(void) {
             continue;
         }
 
+        if (strcmp(args[0], "exit") == 0) {
+            break;
+        }
+
+        if (strcmp(args[0], "cd") == 0) {
+            char *dir = args[1] ? args[1] : getenv("HOME");
+            if (dir == NULL) {
+                fprintf(stderr, "cd: HOME not set\n");
+            } else if (chdir(dir) != 0) {
+                perror("cd");
+            }
+            continue;
+        }
+
+        if (strcmp(args[0], "help") == 0) {
+            printf("msh built-ins: cd [dir], help, exit\n");
+            continue;
+        }
+
         pid_t pid = fork();
         if (pid < 0) {
             perror("fork");
