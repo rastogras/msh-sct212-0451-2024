@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 int main(void) {
     char *line = NULL;
@@ -26,6 +28,19 @@ int main(void) {
 
         if (i == 0) {
             continue;
+        }
+
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+        } else if (pid == 0) {
+            execvp(args[0], args);
+            perror(args[0]);
+            exit(127);
+        } else {
+            if (waitpid(pid, NULL, 0) < 0) {
+                perror("waitpid");
+            }
         }
     }
 
